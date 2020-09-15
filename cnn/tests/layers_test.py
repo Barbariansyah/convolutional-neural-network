@@ -31,10 +31,16 @@ class PoolingTC(unittest.TestCase):
     def setUp(self):
         self.layer = Pooling([2,2], 2, 'avg')
 
-    def test_call(self):
+    def test_call_4x4(self):
         inp = [np.array([[244,  35, 227,  57],
                         [178, 127, 222,  88],
                         [172, 115, 188, 150],
                         [  0, 255,  11,  28]])]
         res = self.layer.call(inp)
         self.assertTrue(np.array_equal([np.array([[146, 148.5], [135.5,  94.25]])], res))
+
+    def test_call_2x2(self):
+        inp = [np.array([[227,  57],
+                         [222,  88]])]
+        res = self.layer.call(inp)
+        self.assertTrue(np.array_equal([np.array([[148.5]])], res))

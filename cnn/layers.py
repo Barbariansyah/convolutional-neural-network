@@ -74,7 +74,7 @@ class Pooling(Layer):
         stride = self.stride_size
         filter_x = self.filter_shape[0]
         filter_y = self.filter_shape[1]
-        reduced_map_size = (len(inp[0])//stride) + (1 if len(inp[0])%2 != 1 else 0 )
+        reduced_map_size = (inp[0].shape[0] // stride) + (0 if inp[0].shape[0] % 2 == 0 else 1)
         for fm in inp:
             reduced_map = np.array([[0.0] * reduced_map_size] * reduced_map_size)
             for i in range(0, len(fm), stride):
