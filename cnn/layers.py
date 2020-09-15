@@ -74,13 +74,13 @@ class Pooling(Layer):
         stride = self.stride_size
         filter_x = self.filter_shape[0]
         filter_y = self.filter_shape[1]
-        reduced_map_size = (len(inp[0])//2) + (len(inp[0])%2)
+        reduced_map_size = (len(inp[0])//stride) + (1 if len(inp[0])%2 != 1 else 0 )
         for fm in inp:
             reduced_map = np.array([[0.0] * reduced_map_size] * reduced_map_size)
             for i in range(0, len(fm), stride):
                 for j in range(0, len(fm), stride):
                     red = np.amax(fm[i:i+filter_x, j:j+filter_y]) if self.mode=='max' else np.mean(fm[i:i+filter_x, j:j+filter_y])
-                    reduced_map[i//2, j//2] = red
+                    reduced_map[i//stride, j//stride] = red
             res.append(reduced_map)
         return res
 
