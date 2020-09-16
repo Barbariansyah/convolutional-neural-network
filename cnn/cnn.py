@@ -20,10 +20,10 @@ if __name__ == "__main__":
     cnn = MyCnn()
     inp = []
     for i in range(6):
-        inp.append(np.random.randint(0, 5, size=(6,6)))
+        inp.append(np.random.randint(0, 5, size=(6,5)))
     print(inp)
 
-    cnn.add(Pooling([2,2], 2, 'avg'))
+    cnn.add(Pooling([3,2], 2, 'avg'))
     res = cnn.feed_forward(inp)
 
     print(res)
