@@ -75,17 +75,15 @@ class Pooling(Layer):
     def call(self, inp: List[np.array]) -> List[np.array]:
         res = []
         stride = self.stride_size
-        filter_x = self.filter_shape[0]
-        filter_y = self.filter_shape[1]
-        reduced_map_size = (inp[0].shape[0] // stride) + \
-            (0 if inp[0].shape[0] % 2 == 0 else 1)
+        filter_row = self.filter_shape[0]
+        filter_column = self.filter_shape[1]
+        reduced_map_size_row = (inp[0].shape[0] // stride) + (0 if inp[0].shape[0] % 2 == 0 else 1)
+        reduced_map_size_column = (inp[0].shape[1] // stride) + (0 if inp[0].shape[1] % 2 == 0 else 1)
         for fm in inp:
-            reduced_map = np.array(
-                [[0.0] * reduced_map_size] * reduced_map_size)
-            for i in range(0, len(fm), stride):
-                for j in range(0, len(fm), stride):
-                    red = np.amax(fm[i:i+filter_x, j:j+filter_y]) if self.mode == 'max' else np.mean(
-                        fm[i:i+filter_x, j:j+filter_y])
+            reduced_map = np.array([[0.0] * reduced_map_size_column] * reduced_map_size_row)
+            for i in range(0, fm.shape[0], stride):
+                for j in range(0, fm.shape[1], stride):
+                    red = np.amax(fm[i:i+filter_row, j:j+filter_column]) if self.mode=='max' else np.mean(fm[i:i+filter_row, j:j+filter_column])
                     reduced_map[i//stride, j//stride] = red
             res.append(reduced_map)
         return res
