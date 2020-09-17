@@ -8,15 +8,17 @@ class Layer(ABC):
     def call(self, inp: List[np.array]) -> List[np.array]:
         pass
 
+    def calculate_output_shape(self, inp: List[tuple]):
+        pass
+
 
 class Conv2D(Layer):
-    def __init__(self, padding_size: int, filter_count: int, filter_shape: np.array, stride_size: int):
+    def __init__(self, padding_size: int, filter_count: int, filter_shape: np.array, stride_size: int, input_shape: np.array = None):
         self.padding_size = padding_size
         self.filter_count = filter_count
         self.filter_shape = filter_shape
         self.stride_size = stride_size
-
-        self._init_weight()
+        self.input_shape = input_shape
 
     def call(self, inp: List[np.array]) -> List[np.array]:
         fm_in_size_x = inp[0].shape[0] + 2 * self.padding_size
@@ -33,7 +35,7 @@ class Conv2D(Layer):
 
         return res
 
-    def _init_weight(self):
+    def init_weight(self, input_size):
         self.filters = []
         for _ in range(self.filter_count):
             self.filters.append(np.random.random(
@@ -65,6 +67,15 @@ class Conv2D(Layer):
         reluv = np.vectorize(relu)
         return [reluv(fm) for fm in conv_res]
 
+    def calculate_output_shape(self, inp: List[tuple]):
+        res = []
+        
+        for i in range(self.filter_count):
+            row = ( ( inp[0][0] + 2 * self.padding_size - self.filter_shape[0] ) / self.stride_size ) + 1
+            column = ( ( inp[0][1] + 2 * self.padding_size - self.filter_shape[1] ) / self.stride_size ) + 1
+            res.append((row, column))
+        
+        return res
 
 class Pooling(Layer):
     def __init__(self, filter_shape: np.array, stride_size: int = 2, mode: str = 'max'):
@@ -88,6 +99,16 @@ class Pooling(Layer):
             res.append(reduced_map)
         return res
 
+    def calculate_output_shape(self, inp: List[tuple]):
+        res = []
+        
+        for i in range(len(inp)):
+            row = ( ( inp[0][0] - self.filter_shape[0] ) / self.stride_size ) + 1
+            column = ( ( inp[0][1] - self.filter_shape[1] ) / self.stride_size ) + 1
+            res.append((row, column))
+        
+        return res
+
 
 class Flatten(Layer):
     def __init__(self):
@@ -102,6 +123,14 @@ class Flatten(Layer):
         res = np.array(res)
         res = res.flatten()
         return [res]
+    
+    def calculate_output_shape(self, inp: List[tuple]):
+        res = 0
+
+        for fm_shape in inp:
+            res += fm_shape[0] * fm_shape[1]
+        
+        return [(res,)]
 
 
 class Dense(Layer):
@@ -109,19 +138,20 @@ class Dense(Layer):
         self.unit_count = unit_count
         self.activation_function = activation_function
 
-        self._init_weight()
-
     def call(self, inp: List[np.array]) -> List[np.array]:
         result_dot_matrix = np.dot(inp[0], self.filters)
         result = self._activation(result_dot_matrix)
 
         return [result_dot_matrix]
 
-    def _init_weight(self):
+    def init_weight(self, input_size: List[tuple]):
         self.filters = np.random.random(
-            (2, self.unit_count))
+            (int(input_size[0][0]), self.unit_count))
 
     def _activation(self, conv_res: List[np.array]) -> List[np.array]:
         reluv = np.vectorize(relu)
 
         return [reluv(fm) for fm in conv_res]
+
+    def calculate_output_shape(self, inp: List[tuple]):
+        return [(self.unit_count,)]
