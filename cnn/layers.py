@@ -2,7 +2,7 @@ import numpy as np
 from typing import List
 from abc import ABC
 from .common import relu
-
+from math import ceil
 
 class Layer(ABC):
     def call(self, inp: List[np.array]) -> List[np.array]:
@@ -21,8 +21,8 @@ class Conv2D(Layer):
         self.input_shape = input_shape
 
     def call(self, inp: List[np.array]) -> List[np.array]:
-        fm_in_size_x = inp[0].shape[0] + 2 * self.padding_size
-        fm_in_size_y = inp[0].shape[1] + 2 * self.padding_size
+        fm_in_size_x = self.input_shape[0][0] if self.input_shape is not None else inp[0].shape[0] + 2 * self.padding_size
+        fm_in_size_y = self.input_shape[0][1] if self.input_shape is not None else inp[0].shape[1] + 2 * self.padding_size
         filter_x = self.filter_shape[0]
         filter_y = self.filter_shape[1]
         stride = self.stride_size
@@ -42,8 +42,8 @@ class Conv2D(Layer):
                 (self.filter_shape[0], self.filter_shape[1])))
 
     def _convolution(self, inp: List[np.array]) -> List[np.array]:
-        fm_in_size_x = inp[0].shape[0] + 2 * self.padding_size
-        fm_in_size_y = inp[0].shape[1] + 2 * self.padding_size
+        fm_in_size_x = self.input_shape[0][0] if self.input_shape is not None else inp[0].shape[0] + 2 * self.padding_size
+        fm_in_size_y = self.input_shape[0][1] if self.input_shape is not None else inp[0].shape[1] + 2 * self.padding_size
         filter_x = self.filter_shape[0]
         filter_y = self.filter_shape[1]
         stride = self.stride_size
@@ -72,9 +72,9 @@ class Conv2D(Layer):
 
         for i in range(self.filter_count):
             row = ((inp[0][0] + 2 * self.padding_size -
-                    self.filter_shape[0]) / self.stride_size) + 1
+                    self.filter_shape[0]) // self.stride_size) + 1
             column = ((inp[0][1] + 2 * self.padding_size -
-                       self.filter_shape[1]) / self.stride_size) + 1
+                       self.filter_shape[1]) // self.stride_size) + 1
             res.append((row, column))
 
         return res
@@ -110,8 +110,8 @@ class Pooling(Layer):
         res = []
 
         for i in range(len(inp)):
-            row = ((inp[0][0] - self.filter_shape[0]) / self.stride_size) + 1
-            column = ((inp[0][1] - self.filter_shape[1]) /
+            row = ceil((inp[0][0] - self.filter_shape[0]) / self.stride_size) + 1
+            column = ceil((inp[0][1] - self.filter_shape[1]) /
                       self.stride_size) + 1
             res.append((row, column))
 
@@ -154,7 +154,7 @@ class Dense(Layer):
 
     def init_weight(self, input_size: List[tuple]):
         self.filters = np.random.random(
-            (int(input_size[0][0]), self.unit_count))
+            (input_size[0][0], self.unit_count))
 
     def _activation(self, conv_res: List[np.array]) -> List[np.array]:
         reluv = np.vectorize(relu)
