@@ -150,7 +150,7 @@ class Dense(Layer):
         result_dot_matrix = np.dot(inp[0], self.filters)
         result = self._activation(result_dot_matrix)
 
-        return [result_dot_matrix]
+        return result
 
     def init_weight(self, input_size: List[tuple]):
         self.filters = np.random.random(
