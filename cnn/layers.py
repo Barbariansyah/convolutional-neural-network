@@ -69,13 +69,16 @@ class Conv2D(Layer):
 
     def calculate_output_shape(self, inp: List[tuple]):
         res = []
-        
+
         for i in range(self.filter_count):
-            row = ( ( inp[0][0] + 2 * self.padding_size - self.filter_shape[0] ) / self.stride_size ) + 1
-            column = ( ( inp[0][1] + 2 * self.padding_size - self.filter_shape[1] ) / self.stride_size ) + 1
+            row = ((inp[0][0] + 2 * self.padding_size -
+                    self.filter_shape[0]) / self.stride_size) + 1
+            column = ((inp[0][1] + 2 * self.padding_size -
+                       self.filter_shape[1]) / self.stride_size) + 1
             res.append((row, column))
-        
+
         return res
+
 
 class Pooling(Layer):
     def __init__(self, filter_shape: np.array, stride_size: int = 2, mode: str = 'max'):
@@ -105,12 +108,13 @@ class Pooling(Layer):
 
     def calculate_output_shape(self, inp: List[tuple]):
         res = []
-        
+
         for i in range(len(inp)):
-            row = ( ( inp[0][0] - self.filter_shape[0] ) / self.stride_size ) + 1
-            column = ( ( inp[0][1] - self.filter_shape[1] ) / self.stride_size ) + 1
+            row = ((inp[0][0] - self.filter_shape[0]) / self.stride_size) + 1
+            column = ((inp[0][1] - self.filter_shape[1]) /
+                      self.stride_size) + 1
             res.append((row, column))
-        
+
         return res
 
 
@@ -127,13 +131,13 @@ class Flatten(Layer):
         res = np.array(res)
         res = res.flatten()
         return [res]
-    
+
     def calculate_output_shape(self, inp: List[tuple]):
         res = 0
 
         for fm_shape in inp:
             res += fm_shape[0] * fm_shape[1]
-        
+
         return [(res,)]
 
 

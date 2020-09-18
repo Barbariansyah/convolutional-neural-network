@@ -10,16 +10,18 @@ class MyCnn(object):
 
     def add(self, layer: Layer):
         init_weight = getattr(layer, "init_weight", None)
-        
+
         if len(self.layers):
             if callable(init_weight):
                 layer.init_weight(self.layers_output_shape[-1])
-            self.layers_output_shape.append(layer.calculate_output_shape(self.layers_output_shape[-1]))
+            self.layers_output_shape.append(
+                layer.calculate_output_shape(self.layers_output_shape[-1]))
         else:
             if callable(init_weight):
                 layer.init_weight(layer.input_shape)
-            self.layers_output_shape.append(layer.calculate_output_shape(layer.input_shape))
-        
+            self.layers_output_shape.append(
+                layer.calculate_output_shape(layer.input_shape))
+
         self.layers.append(layer)
         return None
 
