@@ -7,12 +7,6 @@ class Conv2DTC(unittest.TestCase):
     def setUp(self):
         self.layer = Conv2D(0, 2, np.array([3, 3]), 1)
 
-    def test_filters_initialized(self):
-        self.assertIsNotNone(self.layer.filters)
-        self.assertEqual(2, len(self.layer.filters))
-        self.assertEqual(3, self.layer.filters[0].shape[0])
-        self.assertEqual(3, self.layer.filters[0].shape[1])
-
     def test_call(self):
         self.layer.filters = [
             np.array([[-1, 1, -1],
