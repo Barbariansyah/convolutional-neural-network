@@ -11,7 +11,7 @@ if __name__ == "__main__":
     print('input: ')
     print(inp)
 
-    cnn.add(Conv2D(0, 2, [5, 5], 1))
+    cnn.add(Conv2D(0, 2, [5,5], 1, np.array([[6,6] for _ in range(5)])))
     res = cnn.feed_forward(inp)
 
     print('Conv2D: ')
