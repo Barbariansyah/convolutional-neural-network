@@ -34,14 +34,14 @@ def reorganize_layer(img: np.array) -> np.array:
     cols = input_shape[1]
     depth = input_shape[2]
     
-    layers = [[[0] * cols] * rows] * depth
+    layers = [np.array([[0] * cols] * rows) for _ in range(depth)]
 
     for i, row in enumerate(img):
         for j, col in enumerate(row):
             for k, val in enumerate(col):
                 layers[k][i][j] = val
     
-    return np.array(layers)
+    return layers
 
 def interpret_class(res: List[np.array]) -> int:
     return 0 if res[0] > res[1] else 1

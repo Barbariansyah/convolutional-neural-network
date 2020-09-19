@@ -47,16 +47,18 @@ class Conv2D(Layer):
         filter_x = self.filter_shape[0]
         filter_y = self.filter_shape[1]
         stride = self.stride_size
-        fm_x = (fm_in_size_x - filter_x + 1) // stride
-        fm_y = (fm_in_size_y - filter_y + 1) // stride
+        fm_x = ((fm_in_size_x - filter_x) // stride) + 1
+        fm_y = ((fm_in_size_y - filter_y) // stride) + 1
 
         res = []
         for f in self.filters:
             fm = np.array([[0] * fm_x] * fm_y)
             for fm_in in inp:
+                fm_in_padded = np.pad(fm_in, (self.padding_size, ), constant_values=0)
+
                 for i in range(0, fm_x, stride):
                     for j in range(0, fm_y, stride):
-                        receptive_field = fm_in[i:i+filter_x, j:j+filter_y]
+                        receptive_field = fm_in_padded[i:i+filter_x, j:j+filter_y]
                         value = np.sum(np.multiply(f, receptive_field))
                         fm[i, j] = fm[i, j] + value
             res.append(fm)

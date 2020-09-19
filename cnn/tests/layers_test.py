@@ -23,6 +23,37 @@ class Conv2DTC(unittest.TestCase):
         self.assertTrue(np.array_equal(
             [np.array([[0]]), np.array([[527]])], res))
 
+    def test_call_padding(self):
+        self.layer.padding_size = 1
+        self.layer.filters = [
+            np.array([[-1, 1, -1],
+                      [-1, 1, -1],
+                      [-1, 1, -1]]),
+        ]
+        inp = [np.array([[244,  35, 227],
+                         [178, 127, 222],
+                         [172, 115, 188]])]
+        res = self.layer.call(inp)
+        self.assertTrue(np.array_equal(
+            [np.array([[260, 0, 287], [317, 0, 360], [108, 0, 168]])], res))
+
+    def test_call_stride3(self):
+        self.layer.padding_size = 0
+        self.layer.stride_size = 3
+        self.layer.filters = [
+            np.array([[-1, 1, -1],
+                      [-1, 1, -1],
+                      [-1, 1, -1]]),
+        ]
+        inp = [np.array([[244,  35, 244,  35,  35, 244],
+                         [178, 127, 178, 127, 127, 178],
+                         [244,  35, 244,  35,  35, 244],
+                         [178, 127, 178, 127, 127, 178],
+                         [244,  35, 244,  35,  35, 244],
+                         [178, 127, 178, 127, 127, 178]])]
+        res = self.layer.call(inp)
+        self.assertTrue(np.array_equal(
+            [np.array([[0, 0], [0, 0]])], res))
 
 class PoolingTC(unittest.TestCase):
     def setUp(self):
