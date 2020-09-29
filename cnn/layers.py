@@ -81,9 +81,11 @@ class Conv2D(Layer):
 
         return res
 
-    def update_weights(self, partial_error: float, learning_rate: float):
+    def update_weights(self, partial_error: np.array, learning_rate: float):
         pass
 
+    def backward_pass(self, input: np.array, de_dnet: np.array):
+        pass
 
 class Pooling(Layer):
     def __init__(self, filter_shape: np.array, stride_size: int = 2, mode: str = 'max'):
@@ -169,5 +171,8 @@ class Dense(Layer):
     def calculate_output_shape(self, inp: List[tuple]):
         return [(self.unit_count,)]
 
-    def update_weights(self, partial_error: float, learning_rate: float):
+    def update_weights(self, partial_error: np.array, learning_rate: float):
+        pass
+
+    def backward_pass(self, input: np.array, de_dnet: np.array):
         pass
