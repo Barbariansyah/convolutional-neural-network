@@ -30,3 +30,12 @@ class MyCnn(object):
         for layer in self.layers:
             temp = layer.call(temp)
         return temp
+
+    def fit(self, inp: list, epochs: float, learning_rate: float, momentum: float):
+        pass
+
+    def _back_propagation(self, learning_rate: float, momentum: float):
+        for i in range(len(self.layers)-1, -1, -1):
+            #call update weight
+            continue
+        pass
