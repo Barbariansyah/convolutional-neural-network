@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List
 from abc import ABC
-from .common import relu
+from .common import relu, softmax
 from math import ceil
 
 class Layer(ABC):
@@ -11,6 +11,8 @@ class Layer(ABC):
     def calculate_output_shape(self, inp: List[tuple]):
         pass
 
+    def backward_pass(self, input: np.array, de_dnet: np.array):
+        pass
 
 class Conv2D(Layer):
     def __init__(self, padding_size: int, filter_count: int, filter_shape: np.array, stride_size: int, input_shape: np.array = None):
@@ -124,6 +126,8 @@ class Pooling(Layer):
 
         return res
 
+    def backward_pass(self, input: np.array, de_dnet: np.array):
+        return [], de_dnet
 
 class Flatten(Layer):
     def __init__(self):
@@ -147,6 +151,8 @@ class Flatten(Layer):
 
         return [(res,)]
 
+    def backward_pass(self, input: np.array, de_dnet: np.array):
+        return [], de_dnet
 
 class Dense(Layer):
     def __init__(self, unit_count: int, activation_function: str = 'relu'):
@@ -164,9 +170,13 @@ class Dense(Layer):
             (input_size[0][0], self.unit_count))
 
     def _activation(self, conv_res: List[np.array]) -> List[np.array]:
-        reluv = np.vectorize(relu)
-
-        return [reluv(fm) for fm in conv_res]
+        if self.activation_function == 'relu':
+            reluv = np.vectorize(relu)
+            result = [reluv(fm) for fm in conv_res]
+        else:
+            result = softmax(conv_res)
+            
+        return result
 
     def calculate_output_shape(self, inp: List[tuple]):
         return [(self.unit_count,)]
