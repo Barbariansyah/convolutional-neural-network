@@ -28,7 +28,7 @@ def normalize_img(img: np.array) -> np.array:
     scalev = np.vectorize(lambda x: x / 255.0)
     return scalev(img)
 
-def reorganize_layer(img: np.array) -> np.array:
+def reorganize_layer(img: np.array) -> List[np.array]:
     input_shape = img.shape
     rows = input_shape[0]
     cols = input_shape[1]
