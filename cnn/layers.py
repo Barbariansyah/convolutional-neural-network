@@ -83,7 +83,7 @@ class Conv2D(Layer):
 
         return res
 
-    def update_weights(self, partial_error: np.array, learning_rate: float):
+    def update_weights(self, partial_error: List[np.array], learning_rate: float, momentum: float, prev_delta_w: List[np.array]):
         pass
 
     def backward_pass(self, input: np.array, de_dnet: np.array):
@@ -181,7 +181,7 @@ class Dense(Layer):
     def calculate_output_shape(self, inp: List[tuple]):
         return [(self.unit_count,)]
 
-    def update_weights(self, partial_error: np.array, learning_rate: float):
+    def update_weights(self, partial_error: List[np.array], learning_rate: float, momentum: float, prev_delta_w: List[np.array]):
         pass
 
     def backward_pass(self, input: np.array, de_dnet: np.array):
