@@ -1,6 +1,7 @@
 import numpy as np
 from .layers import *
 from .common import calculate_de_dnet_last_layer, calculate_average_partial_error
+from typing import List
 
 class MyCnn(object):
     def __init__(self):
@@ -33,7 +34,7 @@ class MyCnn(object):
             temp = layer.call(temp)
         return temp, layers_input
 
-    def fit(self, inp: list, epochs: int, batch_size: int = 5,learning_rate: float, momentum: float):
+    def fit(self, inp: list, epochs: int, batch_size: int,learning_rate: float, momentum: float):
         #List[List[np.array]]
         prev_delta_w = []
         for epoch in range(epochs):

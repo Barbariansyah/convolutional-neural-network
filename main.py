@@ -64,6 +64,6 @@ if __name__ == "__main__":
     cnn.add(Dense(2))
 
     for img, label in zip(img_list, labels):
-        res = cnn.feed_forward(img)
+        res, layers_input = cnn.feed_forward(img)
         res_class = interpret_class(res)
         print(f'Prediction: {res_class}\t| Correct: {label}\t| Raw: {res}')
