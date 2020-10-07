@@ -25,4 +25,16 @@ def calculate_average_partial_error(batch_partial_error: List[List[List[np.array
     #List layers
     #List FMs
     #np.array FM
-    pass
+    data_count = len(batch_partial_error)
+    average_partial_error = batch_partial_error[0]
+    
+    for data_index in range(1, len(batch_partial_error)):
+        for layer_idx in range(len(batch_partial_error[data_index])):
+            for fm_idx, fm in enumerate(batch_partial_error[data_index][layer_idx]):
+                average_partial_error[layer_idx][fm_idx] += fm
+    
+    for layer_idx in range(len(average_partial_error)):
+        for fm_idx in range(len(average_partial_error[layer_idx])):
+            average_partial_error[layer_idx][fm_idx] /= data_count
+
+    return average_partial_error
