@@ -57,12 +57,12 @@ class MyCnn(object):
                         else:
                             prev_delta_w.append(layer.update_weight(average_partial_error[i], learning_rate, momentum, None))
 
-    def _back_propagation(self, inp: List[np.array]) -> List[List[np.array]]:
+    def _back_propagation(self, inp: List[np.array], target_class: int) -> List[List[np.array]]:
         # 1. feed forward, save input
         # 2. backward pass, save error of layer-n+1
         
         result, layers_input = self.feed_forward(inp)
-        de_dnet_list = [calculate_de_dnet_last_layer(result)]
+        de_dnet_list = [calculate_de_dnet_last_layer(result, target_class)]
         de_dw_list = []
 
         for i in range(len(self.layers)-1, -1, -1):
