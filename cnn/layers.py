@@ -39,9 +39,11 @@ class Conv2D(Layer):
 
     def init_weight(self, input_size):
         self.filters = []
+        self.biases = []
         for _ in range(self.filter_count):
             self.filters.append(np.random.random(
                 (self.filter_shape[0], self.filter_shape[1])))
+            self.biases.append(np.random.random())
 
     def _convolution(self, inp: List[np.array]) -> List[np.array]:
         fm_in_size_x = self.input_shape[0][0] if self.input_shape is not None else inp[0].shape[0] + 2 * self.padding_size
@@ -53,16 +55,22 @@ class Conv2D(Layer):
         fm_y = ((fm_in_size_y - filter_y) // stride) + 1
 
         res = []
-        for f in self.filters:
+        for f, b in zip(self.filters, self.biases):
             fm = np.array([[0] * fm_x] * fm_y)
             for fm_in in inp:
                 fm_in_padded = np.pad(fm_in, (self.padding_size, ), constant_values=0)
 
-                for i in range(0, fm_x, stride):
-                    for j in range(0, fm_y, stride):
-                        receptive_field = fm_in_padded[i:i+filter_x, j:j+filter_y]
+                for i in range(0, fm_x):
+                    for j in range(0, fm_y):
+                        i_stride, j_stride = i * stride, j * stride
+                        receptive_field = fm_in_padded[i_stride:i_stride+filter_x, j_stride:j_stride+filter_y]
                         value = np.sum(np.multiply(f, receptive_field))
                         fm[i, j] = fm[i, j] + value
+
+            for i in range(fm_x):
+                for j in range(fm_y):
+                    fm[i, j] += b
+                    
             res.append(fm)
 
         return res
