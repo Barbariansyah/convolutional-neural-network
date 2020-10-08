@@ -11,7 +11,7 @@ class Layer(ABC):
     def calculate_output_shape(self, inp: List[tuple]):
         pass
 
-    def backward_pass(self, input: np.array, de_dnet: np.array):
+    def backward_pass(self, input: List[np.array], de_dnet: List[np.array]):
         pass
 
 class Conv2D(Layer):
@@ -86,7 +86,7 @@ class Conv2D(Layer):
     def update_weights(self, partial_error: List[np.array], learning_rate: float, momentum: float, prev_delta_w: List[np.array]):
         pass
 
-    def backward_pass(self, input: np.array, de_dnet: np.array):
+    def backward_pass(self, input: List[np.array], de_dnet: List[np.array]):
         pass
 
 class Pooling(Layer):
@@ -126,7 +126,7 @@ class Pooling(Layer):
 
         return res
 
-    def backward_pass(self, input: np.array, de_dnet: np.array):
+    def backward_pass(self, input: List[np.array], de_dnet: List[np.array]):
         return [], de_dnet
 
 class Flatten(Layer):
@@ -151,7 +151,7 @@ class Flatten(Layer):
 
         return [(res,)]
 
-    def backward_pass(self, input: np.array, de_dnet: np.array):
+    def backward_pass(self, input: List[np.array], de_dnet: List[np.array]):
         return [], de_dnet
 
 class Dense(Layer):
@@ -187,5 +187,5 @@ class Dense(Layer):
     def update_weights(self, partial_error: List[np.array], learning_rate: float, momentum: float, prev_delta_w: List[np.array]):
         pass
 
-    def backward_pass(self, input: np.array, de_dnet: np.array):
+    def backward_pass(self, input: List[np.array], de_dnet: List[np.array]):
         pass
