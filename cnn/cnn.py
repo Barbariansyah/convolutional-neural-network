@@ -37,26 +37,32 @@ class MyCnn(object):
     def fit(self, inp: list, target_classes: list, epochs: int, batch_size: int,learning_rate: float, momentum: float):
         #List[List[np.array]]
         prev_delta_w = []
+        prev_delta_b = []
         for epoch in range(epochs):
             n_batch = math.ceil(len(inp) / batch_size)
             for n in range(n_batch):
                 batch_partial_error = []
+                batch_partial_bias_error = []
                 inp_batch = inp[ n * batch_size : (n + 1) * batch_size ]
                 target_batch = target_classes[ n * batch_size : (n + 1) * batch_size ]
                 for data, target in zip(inp_batch, target_batch):
-                    partial_error = self._back_propagation(data, target)
+                    partial_error, partial_bias_error = self._back_propagation(data, target)
                     batch_partial_error.append(partial_error)
+                    batch_partial_bias_error.append(partial_bias_error)
                 
                 #calculate avg partial error return List[List[np.array]]
                 average_partial_error = calculate_average_partial_error(batch_partial_error)
+                average_partial_bias_error = calculate_average_partial_error(batch_partial_bias_error)
 
                 for i, layer in enumerate(self.layers):
                     update_weight = getattr(layer, "update_weight", None)
                     if callable(update_weight):
                         if prev_delta_w:
-                            prev_delta_w[i] = layer.update_weight(average_partial_error[i], learning_rate, momentum, prev_delta_w[i])
+                            prev_delta_w[i], prev_delta_b[i] = layer.update_weight(average_partial_error[i], learning_rate, momentum, prev_delta_w[i], average_partial_bias_error, prev_delta_b[i])
                         else:
-                            prev_delta_w.append(layer.update_weight(average_partial_error[i], learning_rate, momentum, None))
+                            delta_w, delta_b = layer.update_weight(average_partial_error[i], learning_rate, momentum, None, average_partial_bias_error, None)
+                            prev_delta_w.append(delta_w)
+                            prev_delta_b.append(delta_b)
 
     def _back_propagation(self, inp: List[np.array], target_class: int) -> List[List[np.array]]:
         # 1. feed forward, save input
