@@ -65,10 +65,12 @@ class MyCnn(object):
         result, layers_input = self.feed_forward(inp)
         de_dnet_list = [calculate_de_dnet_last_layer(result, target_class)]
         de_dw_list = []
+        de_db_list = []
 
         for i in range(len(self.layers)-1, -1, -1):
-            layer_de_dw, layer_de_dnet = layers[i].backward_pass(layers_input[i], de_dnet_list[0])
+            layer_de_dw, layer_de_dnet, layer_de_db = layers[i].backward_pass(layers_input[i], de_dnet_list[0])
             de_dnet_list.insert(0, layer_de_dnet) 
             de_dw_list.insert(0, layer_de_dw)
+            de_db_list.insert(0, layer_de_db)
 
-        return de_dw_list
+        return de_dw_list, de_db_list
