@@ -6,6 +6,8 @@ from ..layers import Conv2D, Pooling, Flatten
 class Conv2DTC(unittest.TestCase):
     def setUp(self):
         self.layer = Conv2D(0, 2, np.array([3, 3]), 1)
+        self.layer.init_weight(np.array([3,3]))
+        self.layer.biases = [0] * len(self.layer.biases)
 
     def test_call(self):
         self.layer.filters = [
@@ -38,6 +40,8 @@ class Conv2DTC(unittest.TestCase):
             [np.array([[260, 0, 287], [317, 0, 360], [108, 0, 168]])], res))
 
     def test_call_stride3(self):
+        self.layer.init_weight(np.array([6,6]))
+        self.layer.biases = [0] * len(self.layer.biases)
         self.layer.padding_size = 0
         self.layer.stride_size = 3
         self.layer.filters = [

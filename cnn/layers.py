@@ -1,8 +1,10 @@
 import numpy as np
-from typing import List
+from typing import List, Tuple
 from abc import ABC
 from .common import relu, softmax
 from math import ceil
+
+__all__ = ['Layer', 'Conv2D', 'Pooling', 'Flatten', 'Dense']
 
 class Layer(ABC):
     def call(self, inp: List[np.array]) -> List[np.array]:
@@ -11,20 +13,20 @@ class Layer(ABC):
     def calculate_output_shape(self, inp: List[tuple]):
         pass
 
-    def backward_pass(self, input: List[np.array], de_dnet: List[np.array]):
+    def backward_pass(self, input_layer: List[np.array], de_dnet: List[np.array]) -> Tuple[List[np.array], List[np.array], List[np.array]]:
         pass
 
 class Conv2D(Layer):
     def __init__(self, padding_size: int, filter_count: int, filter_shape: np.array, stride_size: int, input_shape: np.array = None):
         self.padding_size = padding_size
         self.filter_count = filter_count
-        self.filter_shape = filter_shape
+        self.filter_shape = filter_shape # [width, height]
         self.stride_size = stride_size
-        self.input_shape = input_shape
+        self.input_shape = input_shape # [[width, height]]
 
     def call(self, inp: List[np.array]) -> List[np.array]:
-        fm_in_size_x = self.input_shape[0][0] if self.input_shape is not None else inp[0].shape[0] + 2 * self.padding_size
-        fm_in_size_y = self.input_shape[0][1] if self.input_shape is not None else inp[0].shape[1] + 2 * self.padding_size
+        fm_in_size_x = self.input_shape[0][0] if self.input_shape is not None else inp[0].shape[1] + 2 * self.padding_size
+        fm_in_size_y = self.input_shape[0][1] if self.input_shape is not None else inp[0].shape[0] + 2 * self.padding_size
         filter_x = self.filter_shape[0]
         filter_y = self.filter_shape[1]
         stride = self.stride_size
@@ -43,11 +45,11 @@ class Conv2D(Layer):
         for _ in range(self.filter_count):
             self.filters.append(np.random.random(
                 (self.filter_shape[0], self.filter_shape[1])))
-            self.biases.append(np.random.random())
+            self.biases.append(0)
 
     def _convolution(self, inp: List[np.array]) -> List[np.array]:
-        fm_in_size_x = self.input_shape[0][0] if self.input_shape is not None else inp[0].shape[0] + 2 * self.padding_size
-        fm_in_size_y = self.input_shape[0][1] if self.input_shape is not None else inp[0].shape[1] + 2 * self.padding_size
+        fm_in_size_x = self.input_shape[0][0] if self.input_shape is not None else inp[0].shape[1] + 2 * self.padding_size
+        fm_in_size_y = self.input_shape[0][1] if self.input_shape is not None else inp[0].shape[0] + 2 * self.padding_size
         filter_x = self.filter_shape[0]
         filter_y = self.filter_shape[1]
         stride = self.stride_size
@@ -63,13 +65,13 @@ class Conv2D(Layer):
                 for i in range(0, fm_x):
                     for j in range(0, fm_y):
                         i_stride, j_stride = i * stride, j * stride
-                        receptive_field = fm_in_padded[i_stride:i_stride+filter_x, j_stride:j_stride+filter_y]
+                        receptive_field = fm_in_padded[j_stride:j_stride+filter_y, i_stride:i_stride+filter_x]
                         value = np.sum(np.multiply(f, receptive_field))
-                        fm[i, j] = fm[i, j] + value
+                        fm[j, i] = fm[j, i] + value
 
             for i in range(fm_x):
                 for j in range(fm_y):
-                    fm[i, j] += b
+                    fm[j, i] += b
                     
             res.append(fm)
 
@@ -94,8 +96,62 @@ class Conv2D(Layer):
     def update_weights(self, partial_error: List[np.array], learning_rate: float, momentum: float, prev_delta_w: List[np.array]):
         pass
 
-    def backward_pass(self, input: List[np.array], de_dnet: List[np.array]):
-        pass
+    def backward_pass(self, input_layer: List[np.array], de_dnet: List[np.array]):
+        input_layer_size_x = self.input_shape[0][0] if self.input_shape is not None else inp[0].shape[1] + 2 * self.padding_size
+        input_layer_size_y = self.input_shape[0][1] if self.input_shape is not None else inp[0].shape[0] + 2 * self.padding_size
+        filter_x = self.filter_shape[0]
+        filter_y = self.filter_shape[1]
+        output_layer = self.call(input_layer)
+        
+        # Calculate dE/db and dE/dx
+        de_db = []
+        de_dbefore_relu = []
+        for fm, de_dnet_fm in zip(output_layer, de_dnet):
+            fm_x, fm_y = fm.shape[1], fm.shape[0]
+            de_dbefore_relu.append(np.copy(de_dnet_fm))
+            for i in fm_x:
+                for j in fm_y:
+                    if fm[j, i] <= 0:
+                        de_dbefore_relu[j, i] = 0
+            de_db.append(np.sum(de_dbefore_relu[-1]))
+        de_db = [np.array(de_db)]
+
+        dx_x = de_dbefore_relu[0].shape[1]
+        dx_y = de_dbefore_relu[0].shape[0]
+
+        # Calculate dE/dw from valid convolution with dE/dx as filter
+        stride = input_layer_size_x // dx_x
+        de_dw = []
+        for f in de_dbefore_relu:
+            de_dw_fm = np.array([[0] * filter_x] * filter_y)
+            for fm_in in input_layer:
+                fm_in_padded = np.pad(fm_in, (self.padding_size, ), constant_values=0)
+
+                for i in range(0, filter_x):
+                    for j in range(0, filter_y):
+                        i_stride, j_stride = i * stride, j * stride
+                        receptive_field = fm_in_padded[j_stride:j_stride+dx_y, i_stride:i_stride+dx_x]
+                        value = np.sum(np.multiply(f, receptive_field))
+                        de_dw_fm[j, i] = de_dw_fm[j, i] + value
+                    
+            de_dw.append(de_dw_fm)
+        
+        # Calculate dE/dnet from full convolution
+        full_padding_size = (((input_layer_size_x - 1) * self.stride_size) - dx_x + filter_x) // 2
+        dx_padded = [np.pad(de_dbefore_relu, (full_padding_size, ), constant_values=0)]
+        de_dnet_fm = np.array([[0] * input_layer_size_x] * input_layer_size_y)
+        for f, dxp in zip(self.filters, dx_padded):
+            for i in range(0, input_layer_size_x):
+                for j in range(0, input_layer_size_y):
+                    i_stride, j_stride = i * stride, j * stride
+                    receptive_field = dxp[j_stride:j_stride+dx_y, i_stride:i_stride+dx_x]
+                    value = np.sum(np.multiply(f, receptive_field))
+                    de_dnet_fm[j, i] = de_dnet_fm[j, i] + value
+
+        de_dnet = [de_dnet_fm] * len(input_layer)
+
+        return de_dw, de_db, de_net 
+
 
 class Pooling(Layer):
     def __init__(self, filter_shape: np.array, stride_size: int = 2, mode: str = 'max'):
