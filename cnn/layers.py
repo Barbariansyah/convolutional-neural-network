@@ -46,6 +46,7 @@ class Conv2D(Layer):
             self.filters.append(np.random.random(
                 (self.filter_shape[0], self.filter_shape[1])))
             self.biases.append(0)
+        self.biases = [np.array(self.biases)]
 
     def _convolution(self, inp: List[np.array]) -> List[np.array]:
         fm_in_size_x = self.input_shape[0][0] if self.input_shape is not None else inp[0].shape[1] + 2 * self.padding_size
@@ -57,7 +58,7 @@ class Conv2D(Layer):
         fm_y = ((fm_in_size_y - filter_y) // stride) + 1
 
         res = []
-        for f, b in zip(self.filters, self.biases):
+        for f, b in zip(self.filters, self.biases[0]):
             fm = np.array([[0] * fm_x] * fm_y)
             for fm_in in inp:
                 fm_in_padded = np.pad(fm_in, (self.padding_size, ), constant_values=0)
@@ -93,8 +94,22 @@ class Conv2D(Layer):
 
         return res
 
-    def update_weights(self, partial_error: List[np.array], learning_rate: float, momentum: float, prev_delta_w: List[np.array], de_db: List[np.array]):
-        pass
+    def update_weights(self, partial_error: List[np.array], learning_rate: float, momentum: float, prev_delta_w: List[np.array], de_db: List[np.array], prev_delta_b: List[np.array]):
+        delta_w = []
+        delta_b = []
+
+        for i in range(len(self.filters)):
+            prev_delta_w_i = prev_delta_w[i] if prev_delta_w is not None else 0
+            delta_w_i = learning_rate * partial_error[i] + momentum * prev_delta_w_i
+            delta_w.append(delta_w_i)
+            self.filters[i] = np.subtract(self.filters[i], delta_w_i)
+
+        prev_delta_b_i = prev_delta_b[0] if prev_delta_b is not None else 0
+        delta_b_i = learning_rate * de_db[0] + momentum * prev_delta_b_i
+        delta_b.append(delta_b_i)
+        self.biases[0] = np.subtract(self.biases[0], delta_b_i)
+
+        return delta_w, delta_b
 
     def backward_pass(self, input_layer: List[np.array], de_dnet: List[np.array]):
         input_layer_size_x = self.input_shape[0][0] if self.input_shape is not None else inp[0].shape[1] + 2 * self.padding_size

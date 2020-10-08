@@ -7,7 +7,7 @@ class Conv2DTC(unittest.TestCase):
     def setUp(self):
         self.layer = Conv2D(0, 2, np.array([3, 3]), 1)
         self.layer.init_weight(np.array([3,3]))
-        self.layer.biases = [0] * len(self.layer.biases)
+        self.layer.biases = [np.array([0] * self.layer.biases[0].shape[0])]
 
     def test_call(self):
         self.layer.filters = [
@@ -41,7 +41,7 @@ class Conv2DTC(unittest.TestCase):
 
     def test_call_stride3(self):
         self.layer.init_weight(np.array([6,6]))
-        self.layer.biases = [0] * len(self.layer.biases)
+        self.layer.biases = [np.array([0] * self.layer.biases[0].shape[0])]
         self.layer.padding_size = 0
         self.layer.stride_size = 3
         self.layer.filters = [
