@@ -44,7 +44,7 @@ def reorganize_layer(img: np.array) -> List[np.array]:
     return layers
 
 def interpret_class(res: List[np.array]) -> int:
-    return 0 if res[0] > res[1] else 1
+    return 0 if res[0][0] > res[0][1] else 1
 
 if __name__ == "__main__":
     imgs, labels = load_img_as_dataset()
@@ -61,6 +61,8 @@ if __name__ == "__main__":
     cnn.add(Conv2D(0, 8, np.array([4, 4]), 1, np.array([[IMG_HEIGHT, IMG_WIDTH] for _ in range(3)])))
     cnn.add(Pooling(np.array([2, 2]), 2, 'avg'))
     cnn.add(Flatten())
+    cnn.add(Dense(2, 'softmax'))
+    cnn.add(Dense(2))
     cnn.add(Dense(2))
 
     for img, label in zip(img_list, labels):
