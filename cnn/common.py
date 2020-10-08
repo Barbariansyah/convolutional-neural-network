@@ -14,10 +14,10 @@ def calculate_de_dnet_last_layer(out: List[np.array], target_class: int) -> List
     res = []
     for j, p in enumerate(out[0]):
         if j == target_class:
-            res.append(np.array([-(1-p)]))
+            res.append(-(1-p))
         else:
-            res.append(np.array([p]))
-    return res
+            res.append(p)
+    return [np.array(res)]
 
 def calculate_average_partial_error(batch_partial_error: List[List[List[np.array]]]) -> List[List[np.array]]:
     #List Data
