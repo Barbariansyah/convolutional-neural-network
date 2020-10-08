@@ -11,7 +11,7 @@ class Layer(ABC):
     def calculate_output_shape(self, inp: List[tuple]):
         pass
 
-    def backward_pass(self, input: np.array, de_dnet: np.array):
+    def backward_pass(self, input: List[np.array], de_dnet: List[np.array]):
         pass
 
 class Conv2D(Layer):
@@ -94,7 +94,7 @@ class Conv2D(Layer):
     def update_weights(self, partial_error: List[np.array], learning_rate: float, momentum: float, prev_delta_w: List[np.array]):
         pass
 
-    def backward_pass(self, input: np.array, de_dnet: np.array):
+    def backward_pass(self, input: List[np.array], de_dnet: List[np.array]):
         pass
 
 class Pooling(Layer):
@@ -134,7 +134,7 @@ class Pooling(Layer):
 
         return res
 
-    def backward_pass(self, input: np.array, de_dnet: np.array):
+    def backward_pass(self, input: List[np.array], de_dnet: List[np.array]):
         return [], de_dnet
 
 class Flatten(Layer):
@@ -159,7 +159,7 @@ class Flatten(Layer):
 
         return [(res,)]
 
-    def backward_pass(self, input: np.array, de_dnet: np.array):
+    def backward_pass(self, input: List[np.array], de_dnet: List[np.array]):
         return [], de_dnet
 
 class Dense(Layer):
@@ -169,6 +169,7 @@ class Dense(Layer):
 
     def call(self, inp: List[np.array]) -> List[np.array]:
         result_dot_matrix = np.dot(inp[0], self.filters)
+        result_dot_matrix = [np.add(result_dot_matrix, self.bias_weight)]
         result = self._activation(result_dot_matrix)
 
         return result
@@ -176,6 +177,8 @@ class Dense(Layer):
     def init_weight(self, input_size: List[tuple]):
         self.filters = np.random.random(
             (input_size[0][0], self.unit_count))
+        self.bias_weight = np.random.random(
+            self.unit_count)
 
     def _activation(self, conv_res: List[np.array]) -> List[np.array]:
         if self.activation_function == 'relu':
@@ -192,5 +195,5 @@ class Dense(Layer):
     def update_weights(self, partial_error: List[np.array], learning_rate: float, momentum: float, prev_delta_w: List[np.array]):
         pass
 
-    def backward_pass(self, input: np.array, de_dnet: np.array):
+    def backward_pass(self, input: List[np.array], de_dnet: List[np.array]):
         pass

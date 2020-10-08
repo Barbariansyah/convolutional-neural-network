@@ -34,7 +34,7 @@ class MyCnn(object):
             temp = layer.call(temp)
         return temp, layers_input
 
-    def fit(self, inp: list, epochs: int, batch_size: int,learning_rate: float, momentum: float):
+    def fit(self, inp: list, target_classes: list, epochs: int, batch_size: int,learning_rate: float, momentum: float):
         #List[List[np.array]]
         prev_delta_w = []
         for epoch in range(epochs):
@@ -42,8 +42,9 @@ class MyCnn(object):
             for n in range(n_batch):
                 batch_partial_error = []
                 inp_batch = inp[ n * batch_size : (n + 1) * batch_size ]
-                for data in inp_batch:
-                    partial_error = self._back_propagation(data)
+                target_batch = target_classes[ n * batch_size : (n + 1) * batch_size ]
+                for data, target in zip(inp_batch, target_batch):
+                    partial_error = self._back_propagation(data, target)
                     batch_partial_error.append(partial_error)
                 
                 #calculate avg partial error return List[List[np.array]]
