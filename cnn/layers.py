@@ -231,7 +231,11 @@ class Flatten(Layer):
         return [(res,)]
 
     def backward_pass(self, input_layer: List[np.array], de_dnet: List[np.array]):
-        return [], de_dnet
+        i = len(input_layer)
+        j, k = input_layer[0].shape
+        res_de_dnet = de_dnet[0].reshape(i, j, k)
+        res_de_dnet = [x for x in res_de_dnet]
+        return [], res_de_dnet, []
 
 class Dense(Layer):
     def __init__(self, unit_count: int, activation_function: str = 'relu'):
