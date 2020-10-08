@@ -135,7 +135,25 @@ class Pooling(Layer):
         return res
 
     def backward_pass(self, input_layer: List[np.array], de_dnet: List[np.array]):
-        return [], de_dnet
+        stride = self.stride_size
+        filter_row = self.filter_shape[0]
+        filter_column = self.filter_shape[1]
+        x, y = input_layer[0].shape
+        de_dnet_copy = np.copy(de_dnet)
+        for idx, de in enumerate(de_dnet_copy):
+            fm = input_layer[idx]
+            x_de, y_de = de.shape
+            for i in range(x_de):
+                for j in range(y_de):
+                    temp = fm[i*stride:i*stride+filter_row, j*stride:j*stride+filter_column]
+                    if self.mode == 'max':
+                        max_p, max_q = np.unravel_index(np.argmax(temp, axis=None), temp.shape)
+                        temp = np.zeros((filter_row, filter_column))
+                        temp[max_p, max_q] = de[i][j]
+                    else:
+                        temp = np.full((filter_row, filter_column), de[i][j])
+                    fm[i*stride:i*stride+filter_row, j*stride:j*stride+filter_column] = temp
+        return [], de_dnet_copy, []
 
 class Flatten(Layer):
     def __init__(self):
