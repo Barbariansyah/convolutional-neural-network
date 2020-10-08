@@ -5,11 +5,10 @@ def relu(x: float) -> float:
     return x if x > 0 else 0
 
 def softmax(inp: List[np.array]) -> list:
-    x = np.concatenate(inp, axis=0)
+    x = inp[0]
     e_x = np.exp(x - np.max(x))
     res = e_x / e_x.sum()
-    res = [np.array([n]) for n in res]
-    return res
+    return [res]
 
 def calculate_de_dnet_last_layer(out: List[np.array], target_class: int) -> List[np.array]:
     res = []
