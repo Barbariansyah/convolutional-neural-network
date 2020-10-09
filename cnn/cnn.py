@@ -38,6 +38,7 @@ class MyCnn(object):
         #List[List[np.array]]
         prev_delta_w = []
         prev_delta_b = []
+        self.layers[-1].last_layer = True
         for epoch in range(epochs):
             n_batch = math.ceil(len(inp) / batch_size)
             for n in range(n_batch):
@@ -69,7 +70,8 @@ class MyCnn(object):
         # 2. backward pass, save error of layer-n+1
         
         result, layers_input = self.feed_forward(inp)
-        de_dnet_list = [calculate_de_dnet_last_layer(result, target_class)]
+        last_layer_activation_layer = getattr(self.layers[-1], 'activation_function')
+        de_dnet_list = [calculate_de_dnet_last_layer(result, target_class, last_layer_activation_layer)]
         de_dw_list = []
         de_db_list = []
 

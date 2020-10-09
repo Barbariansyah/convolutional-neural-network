@@ -10,5 +10,5 @@
     "python.testing.nosetestsEnabled": false,
     "python.testing.unittestEnabled": true,
     "python.linting.enabled": false,
-    "python.pythonPath": "/anaconda3/envs/tf-n/bin/python"
+    "python.pythonPath": "venv/bin/python"
 }

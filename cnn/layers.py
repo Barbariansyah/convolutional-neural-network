@@ -165,7 +165,7 @@ class Conv2D(Layer):
 
         de_dnet = [de_dnet_fm] * len(input_layer)
 
-        return de_dw, de_net, de_db 
+        return de_dw, de_dnet, de_db 
 
 
 class Pooling(Layer):
@@ -259,6 +259,7 @@ class Dense(Layer):
     def __init__(self, unit_count: int, activation_function: str = 'relu'):
         self.unit_count = unit_count
         self.activation_function = activation_function
+        self.last_layer = False
 
     def call(self, inp: List[np.array]) -> List[np.array]:
         result_dot_matrix = np.dot(inp[0], self.filters)
@@ -286,7 +287,51 @@ class Dense(Layer):
         return [(self.unit_count,)]
 
     def update_weights(self, partial_error: List[np.array], learning_rate: float, momentum: float, prev_delta_w: List[np.array], de_db: List[np.array]):
-        pass
+        delta_w = []
+        delta_b = []
+
+        prev_delta_w_i = prev_delta_w[i] if prev_delta_w is not None else 0
+        delta_w_i = learning_rate * partial_error[i] + momentum * prev_delta_w_i
+        delta_w.append(delta_w_i)
+        self.filters = np.subtract(self.filters, delta_w_i)
+
+        prev_delta_b_i = prev_delta_b[0] if prev_delta_b is not None else 0
+        delta_b_i = learning_rate * de_db[0] + momentum * prev_delta_b_i
+        delta_b.append(delta_b_i)
+        self.bias_weight = np.subtract(self.bias_weight, delta_b_i)
+
+        return delta_w, delta_b
 
     def backward_pass(self, input_layer: List[np.array], de_dnet: List[np.array]):
-        pass
+        de_dw = []
+        de_db = []
+        de_dnet = []
+        if not self.last_layer: 
+            output_layer = self.call(input_layer)
+
+            # Calculate dE/db and dE/dx
+            de_dx = []
+            de_dx.append(np.copy(de_dnet))
+            for i in range(de_dx[0].shape[0]):
+                if output_layer[0][i] <= 0:
+                    de_dx[0][i] = 0
+
+            de_db = [np.copy(de_dx[0])]
+
+            # Calculate dE/dw
+            de_dw = [np.dot(input_layer[0].T, de_dx[0])]
+
+            # Calculate dE/dnet
+            de_dnet = [np.matmul(de_dx[0], self.filters)]
+        else:
+            # if last layer
+            # Calculate dE/db
+            de_db = [np.copy(de_dnet[0])]
+
+            # Calculate dE/dw
+            de_dw = [np.matmul(input_layer[0].T, de_dnet[0])]
+
+            # Calculate dE/dnet
+            de_dnet = [np.matmul(de_dnet[0], self.filters)]
+
+        return de_dw, de_dnet, de_db

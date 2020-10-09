@@ -61,7 +61,7 @@ if __name__ == "__main__":
     cnn.add(Conv2D(0, 8, np.array([4, 4]), 1, np.array([[IMG_HEIGHT, IMG_WIDTH] for _ in range(3)])))
     cnn.add(Pooling(np.array([2, 2]), 2, 'avg'))
     cnn.add(Flatten())
-    cnn.add(Dense(2, 'softmax'))
+    cnn.add(Dense(2))
     cnn.add(Dense(2))
     cnn.add(Dense(2))
 
