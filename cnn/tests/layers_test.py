@@ -6,7 +6,7 @@ from ..layers import Conv2D, Pooling, Flatten
 class Conv2DTC(unittest.TestCase):
     def setUp(self):
         self.layer = Conv2D(0, 2, np.array([3, 3]), 1)
-        self.layer.init_weight(np.array([3,3]))
+        self.layer.init_weight(np.array([3, 3]))
         self.layer.biases = [np.array([0] * self.layer.biases[0].shape[0])]
 
     def test_call(self):
@@ -40,7 +40,7 @@ class Conv2DTC(unittest.TestCase):
             [np.array([[260, 0, 287], [317, 0, 360], [108, 0, 168]])], res))
 
     def test_call_stride3(self):
-        self.layer.init_weight(np.array([6,6]))
+        self.layer.init_weight(np.array([6, 6]))
         self.layer.biases = [np.array([0] * self.layer.biases[0].shape[0])]
         self.layer.padding_size = 0
         self.layer.stride_size = 3
@@ -58,6 +58,7 @@ class Conv2DTC(unittest.TestCase):
         res = self.layer.call(inp)
         self.assertTrue(np.array_equal(
             [np.array([[0, 0], [0, 0]])], res))
+
 
 class PoolingTC(unittest.TestCase):
     def setUp(self):
