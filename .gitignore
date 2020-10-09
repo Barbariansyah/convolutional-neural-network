@@ -131,3 +131,6 @@ dmypy.json
 
 # Submission
 pengumpulan/
+
+# Dataset
+dataset/
