@@ -43,8 +43,8 @@ class Conv2D(Layer):
         self.filters = []
         self.biases = []
         for _ in range(self.filter_count):
-            self.filters.append(np.random.random(
-                (self.filter_shape[0], self.filter_shape[1])))
+            f = np.random.random((self.filter_shape[0], self.filter_shape[1])) * 2 - 1
+            self.filters.append(f)
             self.biases.append(0)
         self.biases = [np.array(self.biases)]
 
@@ -124,10 +124,10 @@ class Conv2D(Layer):
         for fm, de_dnet_fm in zip(output_layer, de_dnet):
             fm_x, fm_y = fm.shape[1], fm.shape[0]
             de_dbefore_relu.append(np.copy(de_dnet_fm))
-            for i in fm_x:
-                for j in fm_y:
+            for i in range(fm_x):
+                for j in range(fm_y):
                     if fm[j, i] <= 0:
-                        de_dbefore_relu[j, i] = 0
+                        de_dbefore_relu[-1][j, i] = 0
             de_db.append(np.sum(de_dbefore_relu[-1]))
         de_db = [np.array(de_db)]
 
@@ -153,13 +153,13 @@ class Conv2D(Layer):
         
         # Calculate dE/dnet from full convolution
         full_padding_size = (((input_layer_size_x - 1) * self.stride_size) - dx_x + filter_x) // 2
-        dx_padded = [np.pad(de_dbefore_relu, (full_padding_size, ), constant_values=0)]
         de_dnet_fm = np.array([[0] * input_layer_size_x] * input_layer_size_y)
-        for f, dxp in zip(self.filters, dx_padded):
-            for i in range(0, input_layer_size_x):
-                for j in range(0, input_layer_size_y):
+        for f, de_dx in zip(self.filters, de_dbefore_relu):
+            dxp = np.pad(de_dx, (full_padding_size, ), constant_values=0)
+            for i in range(input_layer_size_x):
+                for j in range(input_layer_size_y):
                     i_stride, j_stride = i * stride, j * stride
-                    receptive_field = dxp[j_stride:j_stride+dx_y, i_stride:i_stride+dx_x]
+                    receptive_field = dxp[j_stride:j_stride+filter_y, i_stride:i_stride+filter_x]
                     value = np.sum(np.multiply(f, receptive_field))
                     de_dnet_fm[j, i] = de_dnet_fm[j, i] + value
 
@@ -211,20 +211,22 @@ class Pooling(Layer):
         filter_column = self.filter_shape[1]
         x, y = input_layer[0].shape
         de_dnet_copy = np.copy(de_dnet)
+        de_dnet_new = [x for x in np.copy(input_layer)]
         for idx, de in enumerate(de_dnet_copy):
-            fm = input_layer[idx]
+            fm = de_dnet_new[idx]
             x_de, y_de = de.shape
             for i in range(x_de):
                 for j in range(y_de):
                     temp = fm[i*stride:i*stride+filter_row, j*stride:j*stride+filter_column]
+                    dest_size = temp.shape
                     if self.mode == 'max':
                         max_p, max_q = np.unravel_index(np.argmax(temp, axis=None), temp.shape)
                         temp = np.zeros((filter_row, filter_column))
                         temp[max_p, max_q] = de[i][j]
                     else:
                         temp = np.full((filter_row, filter_column), de[i][j])
-                    fm[i*stride:i*stride+filter_row, j*stride:j*stride+filter_column] = temp
-        return [], de_dnet_copy, []
+                    fm[i*stride:i*stride+filter_row, j*stride:j*stride+filter_column] = temp[0:dest_size[0], 0:dest_size[1]]
+        return [], de_dnet_new, []
 
 class Flatten(Layer):
     def __init__(self):
@@ -269,8 +271,7 @@ class Dense(Layer):
         return result
 
     def init_weight(self, input_size: List[tuple]):
-        self.filters = np.random.random(
-            (input_size[0][0], self.unit_count))
+        self.filters = np.random.random((input_size[0][0], self.unit_count)) * 2 - 1
         self.bias_weight = np.random.random(
             self.unit_count)
 
@@ -286,12 +287,12 @@ class Dense(Layer):
     def calculate_output_shape(self, inp: List[tuple]):
         return [(self.unit_count,)]
 
-    def update_weights(self, partial_error: List[np.array], learning_rate: float, momentum: float, prev_delta_w: List[np.array], de_db: List[np.array]):
+    def update_weights(self, partial_error: List[np.array], learning_rate: float, momentum: float, prev_delta_w: List[np.array], de_db: List[np.array], prev_delta_b: List[np.array]):
         delta_w = []
         delta_b = []
 
-        prev_delta_w_i = prev_delta_w[i] if prev_delta_w is not None else 0
-        delta_w_i = learning_rate * partial_error[i] + momentum * prev_delta_w_i
+        prev_delta_w_i = prev_delta_w[0] if prev_delta_w is not None else 0
+        delta_w_i = learning_rate * partial_error[0] + momentum * prev_delta_w_i
         delta_w.append(delta_w_i)
         self.filters = np.subtract(self.filters, delta_w_i)
 
@@ -305,13 +306,13 @@ class Dense(Layer):
     def backward_pass(self, input_layer: List[np.array], de_dnet: List[np.array]):
         de_dw = []
         de_db = []
-        de_dnet = []
+        de_dnet_new = []
         if not self.last_layer: 
             output_layer = self.call(input_layer)
 
             # Calculate dE/db and dE/dx
             de_dx = []
-            de_dx.append(np.copy(de_dnet))
+            de_dx.append(np.copy(de_dnet[0]))
             for i in range(de_dx[0].shape[0]):
                 if output_layer[0][i] <= 0:
                     de_dx[0][i] = 0
@@ -319,19 +320,19 @@ class Dense(Layer):
             de_db = [np.copy(de_dx[0])]
 
             # Calculate dE/dw
-            de_dw = [np.dot(input_layer[0].T, de_dx[0])]
+            de_dw = [np.matmul(np.atleast_2d(input_layer[0]).T, np.atleast_2d(de_dx[0]))]
 
             # Calculate dE/dnet
-            de_dnet = [np.matmul(de_dx[0], self.filters)]
+            de_dnet_new = [np.matmul(np.atleast_2d(de_dx[0]), self.filters.T).flatten()]
         else:
             # if last layer
             # Calculate dE/db
             de_db = [np.copy(de_dnet[0])]
 
             # Calculate dE/dw
-            de_dw = [np.matmul(input_layer[0].T, de_dnet[0])]
+            de_dw = [np.matmul(np.atleast_2d(input_layer[0]).T, np.atleast_2d(de_dnet[0]))]
 
             # Calculate dE/dnet
-            de_dnet = [np.matmul(de_dnet[0], self.filters)]
+            de_dnet_new = [np.matmul(np.atleast_2d(de_dnet[0]), self.filters.T).flatten()]
 
-        return de_dw, de_dnet, de_db
+        return de_dw, de_dnet_new, de_db

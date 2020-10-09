@@ -1,3 +1,5 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from cnn.cnn import MyCnn
 from cnn.layers import Conv2D, Pooling, Dense, Flatten
 from typing import List
@@ -55,17 +57,29 @@ if __name__ == "__main__":
         img_norm = normalize_img(img)
         img_reorganized = reorganize_layer(img)
         img_list.append(img_reorganized)
-    img_list = img_list[:10]
+
+    img_list = img_list
+    print(f'Dataset size: {len(img_list)}')
 
     cnn = MyCnn()
-    cnn.add(Conv2D(0, 8, np.array([4, 4]), 1, np.array([[IMG_HEIGHT, IMG_WIDTH] for _ in range(3)])))
-    cnn.add(Pooling(np.array([2, 2]), 2, 'avg'))
+    cnn.add(Conv2D(0, 3, np.array([4, 4]), 1, np.array([[IMG_HEIGHT, IMG_WIDTH] for _ in range(3)])))
+    cnn.add(Pooling(np.array([2, 2]), 2, 'max'))
     cnn.add(Flatten())
+    cnn.add(Dense(5))
     cnn.add(Dense(2))
-    cnn.add(Dense(2))
-    cnn.add(Dense(2))
+    cnn.add(Dense(2, 'softmax'))
 
-    for img, label in zip(img_list, labels):
+    # print('=== Before fit ===')
+    # for img, label in zip(img_list[:10], labels[:10]):
+    #     res, layers_input = cnn.feed_forward(img)
+    #     res_class = interpret_class(res)
+    #     print(f'Prediction: {res_class}\t| Correct: {label}\t| Raw: {res}')
+
+    cnn.fit(img_list, labels, 5, 8, 0.1, 0.01)
+
+    print('=== After fit ===')
+    for img, label in zip(img_list[:10], labels[:10]):
         res, layers_input = cnn.feed_forward(img)
         res_class = interpret_class(res)
         print(f'Prediction: {res_class}\t| Correct: {label}\t| Raw: {res}')
+
