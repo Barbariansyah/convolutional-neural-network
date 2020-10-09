@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 import pickle
 
-IMG_HEIGHT, IMG_WIDTH = 128, 128
+IMG_HEIGHT, IMG_WIDTH = 64, 64
 TRAIN_IMG_DIR = './dataset/train'
 TEST_IMG_DIR = './dataset/test'
 SEED = 6459164
@@ -32,29 +32,33 @@ def load_img_as_train_dataset() -> np.array:
         image_size=(IMG_HEIGHT, IMG_WIDTH)
     )
 
-    imgs = None
-    labels = None
+    imgs = []
+    labels = []
     for img_batch, label_batch in train_ds:
-        imgs = img_batch.numpy()
-        labels = label_batch.numpy()
-        break
+        imgs.append(img_batch.numpy())
+        labels.append(label_batch.numpy())
+
+    imgs = np.concatenate(imgs)
+    labels = np.concatenate(labels)
 
     return imgs, labels
 
 
 def load_img_as_test_dataset() -> np.array:
     test_ds = tf.keras.preprocessing.image_dataset_from_directory(
-        TRAIN_IMG_DIR,
+        TEST_IMG_DIR,
         seed=SEED,
         image_size=(IMG_HEIGHT, IMG_WIDTH)
     )
 
-    imgs = None
-    labels = None
-    for img_batch, label_batch in train_ds:
-        imgs = img_batch.numpy()
-        labels = label_batch.numpy()
-        break
+    imgs = []
+    labels = []
+    for img_batch, label_batch in test_ds:
+        imgs.append(img_batch.numpy())
+        labels.append(label_batch.numpy())
+
+    imgs = np.concatenate(imgs)
+    labels = np.concatenate(labels)
 
     return imgs, labels
 
@@ -93,18 +97,25 @@ if __name__ == "__main__":
         img_norm = normalize_img(img)
         img_reorganized = reorganize_layer(img)
         img_list.append(img_reorganized)
-    img_list = img_list[:10]
+    print(f'Dataset size: {len(img_list)}')
 
     cnn = MyCnn()
-    cnn.add(Conv2D(0, 8, np.array([4, 4]), 1, np.array(
+    cnn.add(Conv2D(0, 4, np.array([3, 3]), 1, np.array(
         [[IMG_HEIGHT, IMG_WIDTH] for _ in range(3)])))
-    cnn.add(Pooling(np.array([2, 2]), 2, 'avg'))
+    cnn.add(Pooling(np.array([2, 2]), 2, 'max'))
     cnn.add(Flatten())
-    cnn.add(Dense(2))
-    cnn.add(Dense(2))
-    cnn.add(Dense(2))
+    cnn.add(Dense(2, 'softmax'))
 
-    for img, label in zip(img_list, labels):
+    # print('=== Before fit ===')
+    # for img, label in zip(img_list[:10], labels[:10]):
+    #     res, layers_input = cnn.feed_forward(img)
+    #     res_class = interpret_class(res)
+    #     print(f'Prediction: {res_class}\t| Correct: {label}\t| Raw: {res}')
+
+    cnn.fit(img_list, labels, 2, 10, 0.1, 0.01)
+
+    print('=== After fit ===')
+    for img, label in zip(img_list[:10], labels[:10]):
         res, layers_input = cnn.feed_forward(img)
         res_class = interpret_class(res)
         print(f'Prediction: {res_class}\t| Correct: {label}\t| Raw: {res}')

@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List, Tuple
 from abc import ABC
-from .common import relu, softmax
+from .common import relu, softmax, sigmoid
 from math import ceil
 
 __all__ = ['Layer', 'Conv2D', 'Pooling', 'Flatten', 'Dense']
@@ -302,8 +302,11 @@ class Dense(Layer):
         if self.activation_function == 'relu':
             reluv = np.vectorize(relu)
             result = [reluv(fm) for fm in conv_res]
-        else:
+        elif self.activation_function == 'softmax':
             result = softmax(conv_res)
+        else:
+            sigmoidv = np.vectorize(sigmoid)
+            result = [sigmoidv(fm) for fm in conv_res]
 
         return result
 

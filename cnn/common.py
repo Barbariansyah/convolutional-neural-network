@@ -13,6 +13,10 @@ def softmax(inp: List[np.array]) -> list:
     return [res]
 
 
+def sigmoid(x: float) -> float:
+    return 1 / (1 + np.exp(-1*x))
+
+
 def calculate_de_dnet_last_layer(out: List[np.array], target_class: int, activation_function: str) -> List[np.array]:
     res = []
     if activation_function == 'softmax':
