@@ -72,6 +72,10 @@ class MyCnn(object):
                             delta_w, delta_b = layer.update_weights(average_partial_error[i], learning_rate, momentum, None, average_partial_bias_error[i], None)
                             prev_delta_w.append(delta_w)
                             prev_delta_b.append(delta_b)
+                    else:
+                        prev_delta_w.append([])
+                        prev_delta_b.append([])
+
             print('', flush=True)
 
     def _back_propagation(self, inp: List[np.array], target_class: int) -> List[List[np.array]]:
