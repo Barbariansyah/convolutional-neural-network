@@ -6,7 +6,7 @@ from typing import List
 import numpy as np
 import tensorflow as tf
 
-IMG_HEIGHT, IMG_WIDTH = 128, 128
+IMG_HEIGHT, IMG_WIDTH = 64, 64
 IMG_DIR = './dataset'
 SEED = 6459164
 
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     print(f'Dataset size: {len(img_list)}')
 
     cnn = MyCnn()
-    cnn.add(Conv2D(0, 3, np.array([4, 4]), 1, np.array([[IMG_HEIGHT, IMG_WIDTH] for _ in range(3)])))
+    cnn.add(Conv2D(0, 4, np.array([3, 3]), 1, np.array([[IMG_HEIGHT, IMG_WIDTH] for _ in range(3)])))
     cnn.add(Pooling(np.array([2, 2]), 2, 'max'))
     cnn.add(Flatten())
     cnn.add(Dense(5))
